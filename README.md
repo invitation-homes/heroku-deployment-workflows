@@ -1,57 +1,69 @@
-<!--
-The name of the project. Can also be a logo or ASCII Art Header (this [site](http://patorjk.com/software/taag/#p=display&f=Slant&t=Pro%20WebApp) can generate nice ASCII art)	
--->	
-# Project Name
+# Heroku Deployment Workflows
 
-<!---
-Some prose that describes the project, in as much detail as necessary to ensure the reader walks away with a basic understanding of the purpose of this repository. Diagrams included here can be useful to help the reader understand how the system is architectured. Links to other relevant documentation might also be useful.
--->
-Clear description of what the project does. 
+A collection of GitHub actions and workflows related to application deployments to Heroku.
 
-<!-- 
-A description of how the code included in the project runs in various environments, including the URLs if that's appropriate
--->
-## Where Does This Run
+Note that these workflows assume that the Heroku application names
+follow our standard of `invh-<application_name>-<environment>`. Applications that do not follow
+this standard _must_ provide their Heroku application names in the deployment section of their
+[.repo-metadata.yaml](https://github.com/invitation-homes/technology-decisions/blob/main/resources/.repo-metadata.yaml) file. An example of this can be found [here](https://github.com/invitation-homes/atlas/blob/main/.repo-metadata.yaml).
 
-<!--
-Step-by-step instructions on how to install the code and any necessary dependencies
--->	
-## How to Use
+## Workflows
 
-<!--
-Make liberal use of code blocks in the "How to Use" section, so it's easy to cut-and-paste the relevant commands into a terminal
+### deploy-heroku-application.yml
 
-Example (Node):
+This workflow performs the following steps:
 
-```bash
-# Clone the repository
-git clone git@github.com:invitation-homes/my-cool-repo.git
+- Deploys the application to the specified environment
+- Records the deployment in our CI/CD database
+- For production deployments, creates the production release tag in the format of `<major>.<minor>.<patch>`
 
-# Install dependencies
-npm install
+#### Example Usage
 
-# Run the application
-npm start
+```yaml
+name: Deploy Application
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: The target deployment environment
+        required: true
+        type: choice
+        options:
+          - 'dev'
+          - 'qa'
+          - 'uat'
+          - 'prod'
+
+jobs:
+  call_shared_workflow:
+    uses: invitation-homes/heroku-deployment-workflows/.github/workflows/deploy-heroku-application.yml@v1
+    secrets: inherit
+    with:
+      environment: ${{ github.event.inputs.environment }}
 ```
 
--->	
-```bash
-# Clone the repository
-git clone git@github.com:invitation-homes/my-cool-repo.git
+### auto-deploy-heroku-application.yml
 
-# Install dependencies
-# <how_to_install_dependencies>
+This workflow performs the following steps:
 
-# Run the application
-# <how_to_start_the_application>
+- Create a unique tag for the commit in the format of `<major>.<minor>.<patch>-<github_run_number>-<short_sha>`
+- Deploys the application to dev. Enabled by default, but can be disabled by adding a secret named `AUTO_DEPLOY_TO_DEV` with a value of false.
+- Deploys the application to qa. Disabled by default, but can be enabled by adding a secret named `AUTO_DEPLOY_TO_QA` with a value of true.
+- Records the deployment in our CI/CD database
+
+#### Example Usage
+
+```yaml
+name: Auto Deploy Application
+
+on:
+  push:
+    branches:
+      - 'main'
+
+jobs:
+  call_shared_workflow:
+    uses: invitation-homes/heroku-deployment-workflows/.github/workflows/auto-deploy-heroku-application.yml@v1
+    secrets: inherit
 ```
-
-<!-- 
-Instructions on how to run locally -- necessary configuration files, secret configuration, etc. As a developer, this section combined with the previous section should give me all of the necessary information to check out and run the project locally	
--->	
-### Local Development
-
-<!-- 
-How is the code built and deployed? Where does the project run? What linting and security checks are in place? Where can you view test results & static code analysis?
--->	
-## CI/CD & Deployment
