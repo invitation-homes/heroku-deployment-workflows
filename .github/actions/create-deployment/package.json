@@ -1,0 +1,21 @@
+{
+  "name": "create-deployment",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "ncc build index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/invitation-homes/heroku-deployment-workflows.git"
+  },
+  "dependencies": {
+    "@actions/core": "1.9.1",
+    "@actions/github": "5.1.0",
+    "axios": "0.27.2"
+  },
+  "devDependencies": {
+    "@vercel/ncc": "0.34.0"
+  }
+}
